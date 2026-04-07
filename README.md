@@ -71,8 +71,8 @@
 
 ```text
 Markdown / 缩进文本
--> pandoc
--> HTML
+-> Swift 内置解析器（逐行扫描缩进）
+-> HTML <ul><li> 嵌套结构
 -> Swift NSPasteboard
 -> 写入 html / plain text / rtf 三种 flavor
 -> 导图软件自动选择最合适的数据类型
@@ -89,6 +89,7 @@ Markdown
 
 本项目最大的区别在于：
 
+- 不依赖 `pandoc`
 - 不依赖 `textutil`
 - 不依赖浏览器复制
 - 不依赖 AppleScript 古老的 HTML data blob
@@ -176,16 +177,9 @@ PDM BOM同步
 
 # 安装依赖
 
-需要安装：
+只需要：
 
-- Swift
-- pandoc
-
-安装 pandoc：
-
-```bash
-brew install pandoc
-```
+- Swift（macOS 自带）
 
 确认 Swift 可用：
 
@@ -209,13 +203,13 @@ chmod +x mindclip
 最推荐的方式：
 
 ```bash
-pbpaste | pandoc -f markdown -t html -s | ./mindclip
+pbpaste | ./mindclip
 ```
 
 也可以：
 
 ```bash
-cat demo.md | pandoc -f markdown -t html -s | ./mindclip
+cat demo.md | ./mindclip
 ```
 
 然后直接去导图软件中粘贴。
@@ -237,7 +231,7 @@ make build
 **第二步：转换并写入剪贴板**
 
 ```bash
-cat demo.md | pandoc -f markdown -t html -s | ./mindclip
+cat demo.md | ./mindclip
 ```
 
 成功后 stderr 会输出：
