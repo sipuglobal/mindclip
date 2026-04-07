@@ -1,6 +1,6 @@
 # Markdown Mindmap Clipboard
 
-一个基于 Swift + NSPasteboard + pandoc 的 macOS 工具，用于将 Markdown 层级列表转换为真正带有父子结构的富文本剪贴板内容，从而可以直接粘贴到导图软件、文档软件、笔记软件中，并保留节点层级。
+一个基于 Swift + NSPasteboard 的 macOS 工具，用于将 Markdown 层级列表转换为真正带有父子结构的富文本剪贴板内容，从而可以直接粘贴到导图软件、文档软件、笔记软件中，并保留节点层级。
 
 ---
 
