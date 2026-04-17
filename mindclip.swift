@@ -33,6 +33,16 @@ func escapeHTML(_ text: String) -> String {
         .replacingOccurrences(of: "\"", with: "&quot;")
 }
 
+/// 预处理：去空行 + 把 `*` 列表标记统一成 `-`
+/// 等价于 `grep . | tr '*' '-'`
+func preprocess(_ text: String) -> String {
+    text
+        .components(separatedBy: "\n")
+        .filter { !$0.isEmpty }
+        .map { $0.replacingOccurrences(of: "*", with: "-") }
+        .joined(separator: "\n")
+}
+
 /// 将 Markdown 缩进列表转为嵌套 <ul><li> HTML（不依赖 pandoc）
 func markdownToHTML(_ markdown: String) -> String {
     // 解析每行：计算缩进量（tab 当 4 格）、提取文本
@@ -45,7 +55,7 @@ func markdownToHTML(_ markdown: String) -> String {
             else               { break }
         }
         let stripped = line.trimmingCharacters(in: .whitespaces)
-        guard stripped.hasPrefix("- ") || stripped.hasPrefix("* ") else { continue }
+        guard stripped.hasPrefix("- ") else { continue }
         items.append((indent: indent, text: String(stripped.dropFirst(2))))
     }
 
@@ -119,7 +129,8 @@ do {
     let input = readAllStdin().trimmingCharacters(in: .whitespacesAndNewlines)
     if input.isEmpty { throw ClipError.stdinEmpty }
 
-    let html = markdownToHTML(input)
+    let normalized = preprocess(input)
+    let html = markdownToHTML(normalized)
 
     let attributed = try parseHTML(html)
     let plain = attributed.string
