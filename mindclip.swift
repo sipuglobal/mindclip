@@ -1,8 +1,10 @@
 import AppKit
+import Darwin
 import Foundation
 
 enum ClipError: Error, LocalizedError {
     case stdinEmpty
+    case clipboardEmpty
     case htmlEncodingFailed
     case htmlImportFailed
     case rtfExportFailed
@@ -11,6 +13,7 @@ enum ClipError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .stdinEmpty:           return "stdin 为空，没有读到内容"
+        case .clipboardEmpty:       return "剪贴板为空，或没有可读取的文本内容"
         case .htmlEncodingFailed:   return "HTML 字符串转 UTF-8 数据失败"
         case .htmlImportFailed:     return "NSAttributedString 从 HTML 导入失败"
         case .rtfExportFailed:      return "NSAttributedString 导出 RTF 失败"
@@ -25,6 +28,11 @@ func readAllStdin() -> String {
     return String(data: data, encoding: .utf8) ?? String(decoding: data, as: UTF8.self)
 }
 
+func readClipboardText() -> String? {
+    let pb = NSPasteboard.general
+    return pb.string(forType: .string)
+}
+
 func escapeHTML(_ text: String) -> String {
     text
         .replacingOccurrences(of: "&", with: "&amp;")
@@ -33,13 +41,28 @@ func escapeHTML(_ text: String) -> String {
         .replacingOccurrences(of: "\"", with: "&quot;")
 }
 
-/// 预处理：去空行 + 把 `*` 列表标记统一成 `-`
-/// 等价于 `grep . | tr '*' '-'`
+/// 预处理：去空行 + 仅把行首列表标记 `*` 统一成 `-`
+/// 允许前面有空白，但不会替换行内其他 `*`
 func preprocess(_ text: String) -> String {
     text
         .components(separatedBy: "\n")
         .filter { !$0.isEmpty }
-        .map { $0.replacingOccurrences(of: "*", with: "-") }
+        .map { line in
+            guard let markerIndex = line.firstIndex(where: { !$0.isWhitespace }),
+                  line[markerIndex] == "*"
+            else {
+                return line
+            }
+
+            let afterMarker = line.index(after: markerIndex)
+            guard afterMarker < line.endIndex, line[afterMarker].isWhitespace else {
+                return line
+            }
+
+            var normalized = line
+            normalized.replaceSubrange(markerIndex...markerIndex, with: "-")
+            return normalized
+        }
         .joined(separator: "\n")
 }
 
@@ -126,8 +149,18 @@ func writeToPasteboard(html: String, plain: String, rtf: Data?) throws {
 }
 
 do {
-    let input = readAllStdin().trimmingCharacters(in: .whitespacesAndNewlines)
-    if input.isEmpty { throw ClipError.stdinEmpty }
+    let stdinIsTerminal = isatty(STDIN_FILENO) != 0
+    let rawInput: String
+    if stdinIsTerminal {
+        rawInput = readClipboardText() ?? ""
+    } else {
+        rawInput = readAllStdin()
+    }
+
+    let input = rawInput.trimmingCharacters(in: .whitespacesAndNewlines)
+    if input.isEmpty {
+        throw stdinIsTerminal ? ClipError.clipboardEmpty : ClipError.stdinEmpty
+    }
 
     let normalized = preprocess(input)
     let html = markdownToHTML(normalized)

@@ -212,6 +212,14 @@ pbpaste | ./mindclip
 cat demo.md | ./mindclip
 ```
 
+如果当前不是通过管道传入内容，而是直接运行：
+
+```bash
+./mindclip
+```
+
+程序会自动读取当前剪贴板里的纯文本内容进行转换。
+
 然后直接去导图软件中粘贴。
 
 ---
@@ -333,8 +341,7 @@ ok: HTML/plain text/RTF 已写入剪贴板
 
 未来可以继续增强：
 
-- 支持直接从剪贴板读取 Markdown
-- 支持 Swift 内部自动调用 pandoc
+- 已支持：未通过管道传入内容时，自动从剪贴板读取 Markdown / 纯文本
 - 支持 `--stdin`
 - 支持 `--file`
 - 支持 `--debug`
@@ -387,4 +394,3 @@ open /tmp/mindmap.html
 - HTML / RTF / Plain Text 多 flavor 投递
 
 对于重度使用 Markdown、导图、知识管理、系统设计、项目拆解的人来说，它会非常有用。
-
