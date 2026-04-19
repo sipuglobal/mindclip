@@ -103,12 +103,12 @@ Markdown
 
 Swift 工具会：
 
-1. 从 stdin 读取 HTML
-2. 使用 `NSAttributedString` 将 HTML 转成富文本对象
-3. 同时生成：
+1. 从 stdin 或当前剪贴板读取 Markdown / 纯文本
+2. 将缩进列表转换成真正嵌套的 HTML `<ul><li>`
+3. 同时准备：
    - HTML
    - Plain Text
-   - RTF
+   - RTF（可选，生成失败时会自动降级）
 4. 写入 macOS 剪贴板
 5. 目标软件会自动选择最适合自己的 flavor
 
@@ -192,8 +192,23 @@ swift --version
 # 编译
 
 ```bash
-swiftc -O mindclip.swift -o mindclip
-chmod +x mindclip
+make build
+```
+
+`Makefile` 会自动：
+
+- 使用当前 macOS SDK
+- 显式指定最小部署目标（默认 `macOS 14.0`）
+- 使用仓库内的 module cache，避免某些环境下的系统缓存权限问题
+
+如果你想手动编译，也建议显式指定 target，而不是直接使用最简单的 `swiftc -O`：
+
+```bash
+SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
+swiftc -O \
+  -sdk "$SDKROOT" \
+  -target "$(uname -m)-apple-macosx14.0" \
+  mindclip.swift -o mindclip
 ```
 
 ---
@@ -207,6 +222,12 @@ make install
 ```
 
 会自动将二进制安装到 `~/.local/bin/mindclip`。
+
+如果你之前已经装过旧版本，尤其是曾在更高版本 macOS / SDK 上编译过旧二进制，请重新执行一次 `make install` 覆盖 `~/.local/bin/mindclip`，否则可能出现：
+
+```text
+built for macOS 15.0 which is newer than running OS
+```
 
 安装后请确认 `~/.local/bin` 已加入 `PATH`，否则系统找不到命令。在 `~/.zshrc` 或 `~/.bashrc` 中添加：
 
@@ -270,6 +291,12 @@ cat demo.md | ./mindclip
 
 ```
 ok: HTML/plain text/RTF 已写入剪贴板
+```
+
+如果当前环境无法生成 RTF，也可能输出：
+
+```
+ok: HTML/plain text 已写入剪贴板
 ```
 
 然后切换到 MindNode（或其他导图软件），直接 `⌘V` 粘贴即可。
@@ -403,6 +430,7 @@ ok: HTML/plain text/RTF 已写入剪贴板
 3. 少数软件只认浏览器复制来源的 HTML
 4. 如果输入 Markdown 缩进不规范，可能导致层级错误
 5. `pandoc` 不同版本输出 HTML 细节可能略有差异
+6. 某些受限环境中，`NSAttributedString` 的 HTML -> RTF 转换可能失败，此时程序会自动退回为 HTML + Plain Text
 
 ---
 

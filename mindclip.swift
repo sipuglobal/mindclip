@@ -5,18 +5,12 @@ import Foundation
 enum ClipError: Error, LocalizedError {
     case stdinEmpty
     case clipboardEmpty
-    case htmlEncodingFailed
-    case htmlImportFailed
-    case rtfExportFailed
     case pasteboardWriteFailed
 
     var errorDescription: String? {
         switch self {
         case .stdinEmpty:           return "stdin 为空，没有读到内容"
         case .clipboardEmpty:       return "剪贴板为空，或没有可读取的文本内容"
-        case .htmlEncodingFailed:   return "HTML 字符串转 UTF-8 数据失败"
-        case .htmlImportFailed:     return "NSAttributedString 从 HTML 导入失败"
-        case .rtfExportFailed:      return "NSAttributedString 导出 RTF 失败"
         case .pasteboardWriteFailed: return "写入剪贴板失败"
         }
     }
@@ -118,12 +112,13 @@ func markdownToHTML(_ markdown: String) -> String {
     return "<!DOCTYPE html><html><body>\(body)</body></html>"
 }
 
-func parseHTML(_ html: String) throws -> NSAttributedString {
+func makeRTFIfPossible(from html: String) -> Data? {
     guard let data = html.data(using: .utf8) else {
-        throw ClipError.htmlEncodingFailed
+        return nil
     }
+
     do {
-        return try NSAttributedString(
+        let attributed = try NSAttributedString(
             data: data,
             options: [
                 .documentType: NSAttributedString.DocumentType.html,
@@ -131,8 +126,14 @@ func parseHTML(_ html: String) throws -> NSAttributedString {
             ],
             documentAttributes: nil
         )
+
+        let fullRange = NSRange(location: 0, length: attributed.length)
+        return try attributed.data(
+            from: fullRange,
+            documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]
+        )
     } catch {
-        throw ClipError.htmlImportFailed
+        return nil
     }
 }
 
@@ -165,14 +166,8 @@ do {
     let normalized = preprocess(input)
     let html = markdownToHTML(normalized)
 
-    let attributed = try parseHTML(html)
-    let plain = attributed.string
-
-    let fullRange = NSRange(location: 0, length: attributed.length)
-    let rtf = try? attributed.data(
-        from: fullRange,
-        documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]
-    )
+    let plain = normalized
+    let rtf = makeRTFIfPossible(from: html)
 
     try writeToPasteboard(html: html, plain: plain, rtf: rtf)
 
