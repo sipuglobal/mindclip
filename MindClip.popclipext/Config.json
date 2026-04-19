@@ -1,0 +1,10 @@
+{
+  "name": "MindClip",
+  "icon": "symbol:list.bullet.indent",
+  "actions": [
+    {
+      "title": "MindClip",
+      "shell script file": "mindclip.sh"
+    }
+  ]
+}
