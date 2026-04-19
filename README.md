@@ -337,6 +337,24 @@ ok: HTML/plain text/RTF 已写入剪贴板
 
 ---
 
+# PopClip 插件
+
+仓库内置了 `MindClip.popclipext`，可以在选中文本后一键调用 mindclip。
+
+**安装：**
+
+双击 `MindClip.popclipext` 文件夹，PopClip 会自动识别并安装。
+
+**使用：**
+
+1. 在任意应用中选中 Markdown 列表文本
+2. 点击 PopClip 工具栏中的 MindClip 按钮
+3. 层级结构写入剪贴板，直接粘贴到导图软件
+
+> 需要先将 `mindclip` 二进制安装到 `~/.local/bin/mindclip`。
+
+---
+
 # 后续可扩展方向
 
 未来可以继续增强：
