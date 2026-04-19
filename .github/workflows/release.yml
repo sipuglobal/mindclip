@@ -1,0 +1,28 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile mindclip
+        run: swiftc -O mindclip.swift -o mindclip
+
+      - name: Package PopClip extension
+        run: zip -r MindClip.popclipextz MindClip.popclipext
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            mindclip
+            MindClip.popclipextz
