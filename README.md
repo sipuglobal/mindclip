@@ -198,6 +198,30 @@ chmod +x mindclip
 
 ---
 
+# 安装
+
+编译完成后运行：
+
+```bash
+make install
+```
+
+会自动将二进制安装到 `~/.local/bin/mindclip`。
+
+安装后请确认 `~/.local/bin` 已加入 `PATH`，否则系统找不到命令。在 `~/.zshrc` 或 `~/.bashrc` 中添加：
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+然后重新加载：
+
+```bash
+source ~/.zshrc
+```
+
+---
+
 # 使用方式
 
 最推荐的方式：
