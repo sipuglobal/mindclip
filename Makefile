@@ -7,6 +7,7 @@ build:
 	swiftc -O $(BINARY).swift -o $(BINARY)
 
 install: build
+	mkdir -p $(INSTALL_DIR)
 	cp $(BINARY) $(INSTALL_DIR)/$(BINARY)
 	chmod +x $(INSTALL_DIR)/$(BINARY)
 
