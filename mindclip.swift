@@ -35,10 +35,13 @@ func escapeHTML(_ text: String) -> String {
         .replacingOccurrences(of: "\"", with: "&quot;")
 }
 
-/// 预处理：去空行 + 仅把行首列表标记 `*` 统一成 `-`
-/// 允许前面有空白，但不会替换行内其他 `*`
+/// 预处理：
+/// - 去空行
+/// - 仅把行首列表标记 `*` 统一成 `-`
+/// - 如果所有行都不是 `-` 列表，则按原缩进为每行补上 `- `
+/// 允许列表标记前面有空白，但不会替换行内其他 `*`
 func preprocess(_ text: String) -> String {
-    text
+    let normalizedLines = text
         .components(separatedBy: "\n")
         .filter { !$0.isEmpty }
         .map { line in
@@ -57,7 +60,23 @@ func preprocess(_ text: String) -> String {
             normalized.replaceSubrange(markerIndex...markerIndex, with: "-")
             return normalized
         }
-        .joined(separator: "\n")
+
+    let shouldAddMarkers = normalizedLines.allSatisfy { line in
+        let stripped = line.trimmingCharacters(in: .whitespaces)
+        return !stripped.hasPrefix("- ")
+    }
+
+    let lines = shouldAddMarkers
+        ? normalizedLines.map { line -> String in
+            guard let firstContentIndex = line.firstIndex(where: { !$0.isWhitespace }) else {
+                return line
+            }
+
+            return line[..<firstContentIndex] + "- " + line[firstContentIndex...]
+        }
+        : normalizedLines
+
+    return lines.joined(separator: "\n")
 }
 
 /// 将 Markdown 缩进列表转为嵌套 <ul><li> HTML（不依赖 pandoc）
